@@ -380,9 +380,22 @@ class _CallLogDialogState extends State<CallLogDialog> {
             const SizedBox(height: 24),
 
             // Save Action
-            SizedBox(
+            Container(
               width: double.infinity,
               height: 48,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF2563EB), Color(0xFF4F46E5)],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF2563EB).withValues(alpha: 0.35),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
               child: ElevatedButton.icon(
                 onPressed: () async {
                   final provider = context.read<LeadProvider>();
@@ -405,13 +418,14 @@ class _CallLogDialogState extends State<CallLogDialog> {
                     );
                   }
                 },
-                icon: const Icon(Icons.check_circle_outline, color: Colors.white),
+                icon: const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
                 label: const Text(
                   'Save & Update Lead Status',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),

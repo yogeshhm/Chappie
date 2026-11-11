@@ -192,37 +192,53 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           );
         }
 
-        // Mobile Layout (Android / Compact) with Bottom Navigation Bar
+        // Mobile Layout (Android / Compact) with Custom Elevated Navigation Bar
         return Scaffold(
           body: IndexedStack(
             index: _currentIndex,
             children: screens,
           ),
-          bottomNavigationBar: NavigationBar(
-            selectedIndex: _currentIndex,
-            onDestinationSelected: _setIndex,
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.dashboard_outlined),
-                selectedIcon: Icon(Icons.dashboard),
-                label: 'Dashboard',
+          bottomNavigationBar: Container(
+            decoration: BoxDecoration(
+              color: widget.isDarkMode ? AppTheme.darkSurface : Colors.white,
+              border: Border(
+                top: BorderSide(
+                  color: widget.isDarkMode ? AppTheme.darkBorder : AppTheme.lightBorder,
+                  width: 1,
+                ),
               ),
-              NavigationDestination(
-                icon: Icon(Icons.people_outline),
-                selectedIcon: Icon(Icons.people),
-                label: 'Leads',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.view_kanban_outlined),
-                selectedIcon: Icon(Icons.view_kanban),
-                label: 'Pipeline',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.settings_outlined),
-                selectedIcon: Icon(Icons.settings),
-                label: 'Settings',
-              ),
-            ],
+            ),
+            child: NavigationBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              height: 64,
+              indicatorColor: const Color(0xFF3B82F6).withValues(alpha: 0.18),
+              selectedIndex: _currentIndex,
+              onDestinationSelected: _setIndex,
+              labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(Icons.dashboard_outlined, size: 20),
+                  selectedIcon: Icon(Icons.dashboard_rounded, color: Color(0xFF3B82F6), size: 21),
+                  label: 'Dashboard',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.people_outline_rounded, size: 20),
+                  selectedIcon: Icon(Icons.people_rounded, color: Color(0xFF3B82F6), size: 21),
+                  label: 'Leads',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.view_kanban_outlined, size: 20),
+                  selectedIcon: Icon(Icons.view_kanban_rounded, color: Color(0xFF3B82F6), size: 21),
+                  label: 'Pipeline',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.settings_outlined, size: 20),
+                  selectedIcon: Icon(Icons.settings_rounded, color: Color(0xFF3B82F6), size: 21),
+                  label: 'Settings',
+                ),
+              ],
+            ),
           ),
         );
       },

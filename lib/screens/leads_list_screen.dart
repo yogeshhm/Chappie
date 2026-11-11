@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/lead_model.dart';
 import '../providers/lead_provider.dart';
+import '../theme/app_theme.dart';
 import '../widgets/lead_card.dart';
 import 'lead_detail_screen.dart';
 
@@ -34,8 +35,13 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
+            final theme = Theme.of(ctx);
+            final isDark = theme.brightness == Brightness.dark;
+
             return AlertDialog(
-              title: const Text('Add New Lead'),
+              backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: const Text('Add New Prospect', style: TextStyle(fontWeight: FontWeight.w700)),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -44,23 +50,23 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                       controller: nameController,
                       decoration: const InputDecoration(labelText: 'Business Name *'),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     TextField(
                       controller: serviceController,
                       decoration: const InputDecoration(labelText: 'Services / Industry *'),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     TextField(
                       controller: phoneController,
                       keyboardType: TextInputType.phone,
                       decoration: const InputDecoration(labelText: 'Phone Number(s)'),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     TextField(
                       controller: locationController,
                       decoration: const InputDecoration(labelText: 'City / Location'),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     TextField(
                       controller: igController,
                       decoration: const InputDecoration(labelText: 'Instagram Handle'),
@@ -86,28 +92,38 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                   onPressed: () => Navigator.pop(ctx),
                   child: const Text('Cancel'),
                 ),
-                ElevatedButton(
-                  onPressed: () {
-                    final name = nameController.text.trim();
-                    if (name.isEmpty) return;
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: AppTheme.primaryGradient,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      final name = nameController.text.trim();
+                      if (name.isEmpty) return;
 
-                    final newLead = LeadModel(
-                      id: DateTime.now().millisecondsSinceEpoch.toString(),
-                      businessName: name,
-                      services: serviceController.text.trim(),
-                      phoneNumbers: phoneController.text.trim(),
-                      location: locationController.text.trim(),
-                      instagramUsername: igController.text.trim(),
-                      leadPriority: priority,
-                      callStatus: 'Not Called',
-                      isCompanyVerified: true,
-                      isNestedDataVerified: false,
-                    );
+                      final newLead = LeadModel(
+                        id: DateTime.now().millisecondsSinceEpoch.toString(),
+                        businessName: name,
+                        services: serviceController.text.trim(),
+                        phoneNumbers: phoneController.text.trim(),
+                        location: locationController.text.trim(),
+                        instagramUsername: igController.text.trim(),
+                        leadPriority: priority,
+                        callStatus: 'Not Called',
+                        isCompanyVerified: true,
+                        isNestedDataVerified: false,
+                      );
 
-                    context.read<LeadProvider>().addLead(newLead);
-                    Navigator.pop(ctx);
-                  },
-                  child: const Text('Save Lead'),
+                      context.read<LeadProvider>().addLead(newLead);
+                      Navigator.pop(ctx);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                    ),
+                    child: const Text('Save Prospect', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  ),
                 ),
               ],
             );
@@ -117,144 +133,210 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
     );
   }
 
+  Widget _buildFilterPill({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+    Color? activeColor,
+    bool isDark = true,
+  }) {
+    final effectiveColor = activeColor ?? const Color(0xFF3B82F6);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? effectiveColor.withValues(alpha: 0.15)
+              : (isDark ? AppTheme.darkSurface : Colors.white),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected
+                ? effectiveColor.withValues(alpha: 0.6)
+                : (isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
+            width: isSelected ? 1.2 : 1.0,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isSelected) ...[
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: effectiveColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected
+                    ? (isDark ? Colors.white : effectiveColor)
+                    : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final provider = context.watch<LeadProvider>();
     final filteredLeads = provider.filteredLeads;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Falconate Leads Directory'),
+        title: const Text(
+          'Lead Directory',
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+        ),
         actions: [
           IconButton(
             tooltip: 'Add Prospect',
-            icon: const Icon(Icons.person_add_alt_1),
+            icon: const Icon(Icons.person_add_alt_1_rounded, size: 20),
             onPressed: _showAddLeadDialog,
           ),
           IconButton(
-            tooltip: 'Clear Filters',
-            icon: const Icon(Icons.filter_alt_off_outlined),
+            tooltip: 'Reset Filters',
+            icon: const Icon(Icons.filter_alt_off_rounded, size: 20),
             onPressed: () {
               _searchController.clear();
               provider.clearFilters();
             },
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: Column(
         children: [
-          // Search Box
+          // Sleek Search Field
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (value) => provider.setSearchQuery(value),
-              decoration: InputDecoration(
-                hintText: 'Search by business name, phone, city, services...',
-                prefixIcon: const Icon(Icons.search, size: 20),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear, size: 18),
-                        onPressed: () {
-                          _searchController.clear();
-                          provider.setSearchQuery('');
-                        },
-                      )
-                    : null,
-                filled: true,
-                fillColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
+            child: Container(
+              decoration: BoxDecoration(
+                color: isDark ? AppTheme.darkSurface : Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                ],
+              ),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (value) => provider.setSearchQuery(value),
+                style: const TextStyle(fontSize: 13.5),
+                decoration: InputDecoration(
+                  hintText: 'Search leads by business name, services, phone, city...',
+                  hintStyle: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
                   ),
+                  prefixIcon: const Icon(Icons.search_rounded, size: 20, color: Color(0xFF64748B)),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear_rounded, size: 18),
+                          onPressed: () {
+                            _searchController.clear();
+                            provider.setSearchQuery('');
+                          },
+                        )
+                      : null,
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
               ),
             ),
           ),
 
-          // Filter Chips Row
+          // Horizontal Filter Chips Row
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Row(
               children: [
-                // Priority Filter
-                FilterChip(
-                  label: const Text('🔥 High Priority'),
-                  selected: provider.selectedPriority == 'High',
-                  onSelected: (selected) {
-                    provider.setPriorityFilter(selected ? 'High' : 'All');
-                  },
+                _buildFilterPill(
+                  label: 'High Priority',
+                  isSelected: provider.selectedPriority == 'High',
+                  onTap: () => provider.setPriorityFilter(
+                    provider.selectedPriority == 'High' ? 'All' : 'High',
+                  ),
+                  activeColor: const Color(0xFFF43F5E),
+                  isDark: isDark,
                 ),
                 const SizedBox(width: 8),
-
-                // Has Phone Filter
-                FilterChip(
-                  label: const Text('📞 Has Phone'),
-                  selected: provider.filterOnlyWithPhone,
-                  onSelected: (_) => provider.toggleOnlyWithPhone(),
+                _buildFilterPill(
+                  label: 'Has Phone',
+                  isSelected: provider.filterOnlyWithPhone,
+                  onTap: () => provider.toggleOnlyWithPhone(),
+                  activeColor: const Color(0xFF06B6D4),
+                  isDark: isDark,
                 ),
                 const SizedBox(width: 8),
-
-                // Status Not Called
-                FilterChip(
-                  label: const Text('⏳ Not Called'),
-                  selected: provider.selectedCallStatus == 'Not Called',
-                  onSelected: (selected) {
-                    provider.setCallStatusFilter(selected ? 'Not Called' : 'All');
-                  },
+                _buildFilterPill(
+                  label: 'Not Called',
+                  isSelected: provider.selectedCallStatus == 'Not Called',
+                  onTap: () => provider.setCallStatusFilter(
+                    provider.selectedCallStatus == 'Not Called' ? 'All' : 'Not Called',
+                  ),
+                  activeColor: const Color(0xFF64748B),
+                  isDark: isDark,
                 ),
                 const SizedBox(width: 8),
-
-                // Status Interested
-                FilterChip(
-                  label: const Text('💬 Interested'),
-                  selected: provider.selectedCallStatus == 'Interested',
-                  onSelected: (selected) {
-                    provider.setCallStatusFilter(selected ? 'Interested' : 'All');
-                  },
+                _buildFilterPill(
+                  label: 'Interested (Hot)',
+                  isSelected: provider.selectedCallStatus == 'Interested',
+                  onTap: () => provider.setCallStatusFilter(
+                    provider.selectedCallStatus == 'Interested' ? 'All' : 'Interested',
+                  ),
+                  activeColor: const Color(0xFF10B981),
+                  isDark: isDark,
                 ),
                 const SizedBox(width: 8),
-
-                // Needs Nested Verification
-                FilterChip(
-                  label: const Text('⚠️ Needs Nested Check'),
-                  selected: provider.filterOnlyUnverified,
-                  onSelected: (_) => provider.toggleOnlyUnverified(),
+                _buildFilterPill(
+                  label: 'Audit Nested Data',
+                  isSelected: provider.filterOnlyUnverified,
+                  onTap: () => provider.toggleOnlyUnverified(),
+                  activeColor: const Color(0xFFF59E0B),
+                  isDark: isDark,
                 ),
                 const SizedBox(width: 8),
-
-                // Follow-ups Due
-                FilterChip(
-                  label: const Text('⏰ Due Today'),
-                  selected: provider.filterOnlyFollowUpsDue,
-                  onSelected: (_) => provider.toggleOnlyFollowUpsDue(),
+                _buildFilterPill(
+                  label: 'Due Follow-ups',
+                  isSelected: provider.filterOnlyFollowUpsDue,
+                  onTap: () => provider.toggleOnlyFollowUpsDue(),
+                  activeColor: const Color(0xFFF43F5E),
+                  isDark: isDark,
                 ),
               ],
             ),
           ),
 
-          // Counter Header
+          // Count Subheader
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 4),
             child: Row(
               children: [
                 Text(
-                  'Showing ${filteredLeads.length} of ${provider.totalCount} Leads',
+                  '${filteredLeads.length} of ${provider.totalCount} PROSPECTS',
                   style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white60 : Colors.black54,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
+                    color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
                   ),
                 ),
                 const Spacer(),
@@ -264,17 +346,19 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                     provider.filterOnlyUnverified ||
                     provider.filterOnlyFollowUpsDue ||
                     provider.searchQuery.isNotEmpty)
-                  TextButton(
-                    onPressed: () {
+                  InkWell(
+                    onTap: () {
                       _searchController.clear();
                       provider.clearFilters();
                     },
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      minimumSize: const Size(50, 24),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    child: const Text(
+                      'Clear all',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF3B82F6),
+                      ),
                     ),
-                    child: const Text('Reset filters', style: TextStyle(fontSize: 11)),
                   ),
               ],
             ),
@@ -288,14 +372,14 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          Icons.search_off,
-                          size: 48,
-                          color: isDark ? Colors.white30 : Colors.black26,
+                          Icons.search_off_rounded,
+                          size: 44,
+                          color: isDark ? const Color(0xFF334155) : Colors.black12,
                         ),
                         const SizedBox(height: 12),
                         const Text(
-                          'No leads match your filter criteria',
-                          style: TextStyle(fontWeight: FontWeight.w600),
+                          'No prospects match your active filters',
+                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                         ),
                         const SizedBox(height: 6),
                         TextButton(
@@ -303,14 +387,14 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                             _searchController.clear();
                             provider.clearFilters();
                           },
-                          child: const Text('Clear all filters'),
+                          child: const Text('Clear filters'),
                         ),
                       ],
                     ),
                   )
                 : ListView.builder(
                     itemCount: filteredLeads.length,
-                    padding: const EdgeInsets.only(bottom: 24),
+                    padding: const EdgeInsets.only(top: 4, bottom: 32),
                     itemBuilder: (context, index) {
                       final lead = filteredLeads[index];
                       return LeadCard(
@@ -329,11 +413,25 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        tooltip: 'Add Lead',
-        onPressed: _showAddLeadDialog,
-        backgroundColor: const Color(0xFF2563EB),
-        child: const Icon(Icons.add, color: Colors.white),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          gradient: AppTheme.primaryGradient,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF2563EB).withValues(alpha: 0.35),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: FloatingActionButton(
+          tooltip: 'Add Prospect',
+          onPressed: _showAddLeadDialog,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: const Icon(Icons.add_rounded, color: Colors.white, size: 24),
+        ),
       ),
     );
   }
