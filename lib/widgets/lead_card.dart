@@ -104,9 +104,6 @@ class LeadCard extends StatelessWidget {
                                   lead.primaryPhone!,
                                   message: message,
                                 );
-                                if (context.mounted) {
-                                  CallLogDialog.show(context, lead);
-                                }
                               },
                               icon: const Icon(Icons.send, size: 14, color: Colors.white),
                               label: const Text('Send on WA', style: TextStyle(color: Colors.white)),
@@ -140,9 +137,6 @@ class LeadCard extends StatelessWidget {
                   onPressed: () async {
                     Navigator.pop(ctx);
                     await OutreachService.openWhatsApp(lead.primaryPhone!);
-                    if (context.mounted) {
-                      CallLogDialog.show(context, lead);
-                    }
                   },
                   icon: const Icon(Icons.chat_bubble_outline),
                   label: const Text('Open Empty WhatsApp Chat'),
@@ -492,7 +486,7 @@ class LeadCard extends StatelessWidget {
               // Action Toolbar
               Row(
                 children: [
-                  // Call Button
+                  // Call Button: Opens dialpad directly with no prompts
                   if (lead.hasPhone) ...[
                     Expanded(
                       flex: 3,
@@ -501,7 +495,7 @@ class LeadCard extends StatelessWidget {
                           final phone = lead.primaryPhone!;
                           await OutreachService.makePhoneCall(phone);
                           if (context.mounted) {
-                            CallLogDialog.show(context, lead);
+                            context.read<LeadProvider>().recordCallAttempt(lead.id);
                           }
                         },
                         icon: const Icon(Icons.call, size: 16, color: Colors.white),

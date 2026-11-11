@@ -418,7 +418,7 @@ class DashboardScreen extends StatelessWidget {
                 onPressed: () async {
                   await OutreachService.makePhoneCall(lead.primaryPhone!);
                   if (context.mounted) {
-                    CallLogDialog.show(context, lead);
+                    context.read<LeadProvider>().recordCallAttempt(lead.id);
                   }
                 },
               ),

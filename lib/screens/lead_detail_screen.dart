@@ -265,9 +265,6 @@ class LeadDetailScreen extends StatelessWidget {
                               onPressed: () async {
                                 Navigator.pop(ctx);
                                 await OutreachService.openWhatsApp(lead.primaryPhone!, message: message);
-                                if (context.mounted) {
-                                  CallLogDialog.show(context, lead);
-                                }
                               },
                               icon: const Icon(Icons.send, size: 14, color: Colors.white),
                               label: const Text('Send', style: TextStyle(color: Colors.white, fontSize: 12)),
@@ -440,7 +437,7 @@ class LeadDetailScreen extends StatelessWidget {
                           onTap: () async {
                             await OutreachService.makePhoneCall(lead.primaryPhone!);
                             if (context.mounted) {
-                              CallLogDialog.show(context, lead);
+                              context.read<LeadProvider>().recordCallAttempt(lead.id);
                             }
                           },
                         ),

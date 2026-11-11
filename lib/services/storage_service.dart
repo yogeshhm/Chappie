@@ -13,6 +13,7 @@ class StorageService {
   static const String _keySupabaseAnonKey = 'falcon_supabase_anon_key';
 
   static const String defaultSupabaseUrl = 'https://avoioogdnbyivinkamup.supabase.co';
+  static const String defaultSupabaseKey = String.fromEnvironment('SUPABASE_KEY', defaultValue: '');
 
   final SharedPreferences _prefs;
 
@@ -91,7 +92,9 @@ class StorageService {
   }
 
   String getSupabaseAnonKey() {
-    return _prefs.getString(_keySupabaseAnonKey) ?? '';
+    final key = _prefs.getString(_keySupabaseAnonKey);
+    if (key != null && key.isNotEmpty) return key;
+    return defaultSupabaseKey;
   }
 
   Future<void> setSupabaseAnonKey(String key) async {
