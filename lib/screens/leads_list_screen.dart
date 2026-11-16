@@ -262,32 +262,24 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
             ),
           ),
 
-          // Horizontal Filter Chips Row
+          // Horizontal Filter Tabs Row
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Row(
               children: [
                 _buildFilterPill(
-                  label: 'High Priority',
-                  isSelected: provider.selectedPriority == 'High',
-                  onTap: () => provider.setPriorityFilter(
-                    provider.selectedPriority == 'High' ? 'All' : 'High',
-                  ),
-                  activeColor: const Color(0xFFF43F5E),
+                  label: 'All (${provider.totalCount})',
+                  isSelected: provider.selectedCallStatus == 'All' &&
+                      provider.selectedPriority == 'All' &&
+                      !provider.filterOnlyWithPhone,
+                  onTap: () => provider.clearFilters(),
+                  activeColor: const Color(0xFF3B82F6),
                   isDark: isDark,
                 ),
                 const SizedBox(width: 8),
                 _buildFilterPill(
-                  label: 'Has Phone',
-                  isSelected: provider.filterOnlyWithPhone,
-                  onTap: () => provider.toggleOnlyWithPhone(),
-                  activeColor: const Color(0xFF06B6D4),
-                  isDark: isDark,
-                ),
-                const SizedBox(width: 8),
-                _buildFilterPill(
-                  label: 'Not Called',
+                  label: 'Not Called (${provider.leadsByStatus('Not Called').length})',
                   isSelected: provider.selectedCallStatus == 'Not Called',
                   onTap: () => provider.setCallStatusFilter(
                     provider.selectedCallStatus == 'Not Called' ? 'All' : 'Not Called',
@@ -297,7 +289,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                 ),
                 const SizedBox(width: 8),
                 _buildFilterPill(
-                  label: 'Interested (Hot)',
+                  label: 'Interested (${provider.leadsByStatus('Interested').length})',
                   isSelected: provider.selectedCallStatus == 'Interested',
                   onTap: () => provider.setCallStatusFilter(
                     provider.selectedCallStatus == 'Interested' ? 'All' : 'Interested',
@@ -307,17 +299,31 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                 ),
                 const SizedBox(width: 8),
                 _buildFilterPill(
-                  label: 'Audit Nested Data',
-                  isSelected: provider.filterOnlyUnverified,
-                  onTap: () => provider.toggleOnlyUnverified(),
+                  label: 'Follow-up (${provider.leadsByStatus('Follow-up').length})',
+                  isSelected: provider.selectedCallStatus == 'Follow-up',
+                  onTap: () => provider.setCallStatusFilter(
+                    provider.selectedCallStatus == 'Follow-up' ? 'All' : 'Follow-up',
+                  ),
                   activeColor: const Color(0xFFF59E0B),
                   isDark: isDark,
                 ),
                 const SizedBox(width: 8),
                 _buildFilterPill(
-                  label: 'Due Follow-ups',
-                  isSelected: provider.filterOnlyFollowUpsDue,
-                  onTap: () => provider.toggleOnlyFollowUpsDue(),
+                  label: 'No Answer (${provider.leadsByStatus('Called - No Answer').length})',
+                  isSelected: provider.selectedCallStatus == 'Called - No Answer',
+                  onTap: () => provider.setCallStatusFilter(
+                    provider.selectedCallStatus == 'Called - No Answer' ? 'All' : 'Called - No Answer',
+                  ),
+                  activeColor: const Color(0xFF8B5CF6),
+                  isDark: isDark,
+                ),
+                const SizedBox(width: 8),
+                _buildFilterPill(
+                  label: 'High Priority (${provider.highPriorityCount})',
+                  isSelected: provider.selectedPriority == 'High',
+                  onTap: () => provider.setPriorityFilter(
+                    provider.selectedPriority == 'High' ? 'All' : 'High',
+                  ),
                   activeColor: const Color(0xFFF43F5E),
                   isDark: isDark,
                 ),

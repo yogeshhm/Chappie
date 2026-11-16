@@ -648,15 +648,57 @@ class LeadDetailScreen extends StatelessWidget {
                       style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const Divider(height: 20),
-                    _buildDetailRow(
-                      icon: Icons.phone,
-                      label: 'Phone Numbers',
-                      value: lead.phoneNumbers.isNotEmpty ? lead.phoneNumbers : 'Not visible in screenshot',
-                      actionIcon: lead.hasPhone ? Icons.call : null,
-                      onAction: lead.hasPhone
-                          ? () => OutreachService.makePhoneCall(lead.primaryPhone!)
-                          : null,
-                    ),
+                    if (lead.allPhones.isNotEmpty) ...[
+                      ...lead.allPhones.map((p) => Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.phone, size: 18, color: Colors.grey),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('Phone Number', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                                  const SizedBox(height: 2),
+                                  Text(p, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                                ],
+                              ),
+                            ),
+                            ElevatedButton.icon(
+                              onPressed: () async {
+                                await OutreachService.makePhoneCall(p);
+                                if (context.mounted) {
+                                  context.read<LeadProvider>().recordCallAttempt(lead.id);
+                                }
+                              },
+                              icon: const Icon(Icons.call, size: 14, color: Colors.white),
+                              label: const Text('Call', style: TextStyle(fontSize: 12, color: Colors.white)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF2563EB),
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              tooltip: 'WhatsApp $p',
+                              icon: const Icon(Icons.chat_bubble_outline, size: 18, color: Color(0xFF25D366)),
+                              onPressed: () => OutreachService.openWhatsApp(p),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                          ],
+                        ),
+                      )),
+                    ] else ...[
+                      _buildDetailRow(
+                        icon: Icons.phone,
+                        label: 'Phone Numbers',
+                        value: 'Not visible in sheet',
+                      ),
+                    ],
                     const SizedBox(height: 12),
                     _buildDetailRow(
                       icon: Icons.email_outlined,

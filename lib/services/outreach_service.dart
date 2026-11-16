@@ -1,101 +1,92 @@
+import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class OutreachService {
-  /// Clean phone numbers and ensure proper country prefix (default India +91 if 10 digits)
-  static String cleanPhoneNumber(String raw) {
-    String cleaned = raw.replaceAll(RegExp(r'[^\d+]'), '');
-    if (cleaned.startsWith('+')) {
-      return cleaned.substring(1);
-    }
-    if (cleaned.length == 10) {
-      return '91$cleaned';
-    }
-    return cleaned;
-  }
-
-  /// Launch direct phone dialer
+  /// Open phone dialer directly with the exact phone number (NO predictions, NO added prefixes)
   static Future<bool> makePhoneCall(String phoneNumber) async {
-    final cleaned = phoneNumber.replaceAll(RegExp(r'[^\d+]'), '');
-    final Uri launchUri = Uri(
-      scheme: 'tel',
-      path: cleaned,
-    );
-    if (await canLaunchUrl(launchUri)) {
-      return await launchUrl(launchUri, mode: LaunchMode.externalApplication);
+    // Keep exact digits / plus as provided in the sheet
+    final clean = phoneNumber.trim().replaceAll(RegExp(r'[^\d+]'), '');
+    if (clean.isEmpty) return false;
+    final Uri uri = Uri(scheme: 'tel', path: clean);
+    try {
+      if (kIsWeb) {
+        return await launchUrl(uri);
+      }
+      return await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      debugPrint('Error launching dialer for $clean: $e');
+      return false;
     }
-    return false;
   }
 
-  /// Open WhatsApp with optional pre-filled pitch message
+  /// Open WhatsApp with the provided number
   static Future<bool> openWhatsApp(String phoneNumber, {String? message}) async {
-    final cleanPhone = cleanPhoneNumber(phoneNumber);
-    String url = 'https://wa.me/$cleanPhone';
+    String clean = phoneNumber.trim().replaceAll(RegExp(r'[^\d]'), '');
+    if (clean.isEmpty) return false;
+    // WhatsApp API requires country code for international format
+    if (clean.length == 10) {
+      clean = '91$clean';
+    }
+    String url = 'https://wa.me/$clean';
     if (message != null && message.trim().isNotEmpty) {
-      final encoded = Uri.encodeComponent(message);
-      url = '$url?text=$encoded';
+      url += '?text=${Uri.encodeComponent(message)}';
     }
     final Uri uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
+    try {
       return await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      debugPrint('Error launching WhatsApp: $e');
+      return false;
     }
-    return false;
   }
 
-  /// Open Email Client
-  static Future<bool> sendEmail(
-    String email, {
-    String subject = 'Inquiry from Falconate (falconate.com) - Digital Presence & Web Apps',
-    String? body,
-  }) async {
-    final params = <String, String>{
-      'subject': subject,
-    };
-    if (body != null && body.isNotEmpty) {
-      params['body'] = body;
-    }
+  /// Open Email Client with exact address
+  static Future<bool> sendEmail(String email, {String? subject, String? body}) async {
+    final clean = email.trim();
+    if (clean.isEmpty) return false;
     final Uri uri = Uri(
       scheme: 'mailto',
-      path: email.trim(),
-      queryParameters: params,
+      path: clean,
+      queryParameters: {
+        if (subject != null && subject.isNotEmpty) 'subject': subject,
+        if (body != null && body.isNotEmpty) 'body': body,
+      },
     );
-    if (await canLaunchUrl(uri)) {
-      return await launchUrl(uri, mode: LaunchMode.externalApplication);
+    try {
+      return await launchUrl(uri);
+    } catch (e) {
+      debugPrint('Error launching email: $e');
+      return false;
     }
-    return false;
+  }
+
+  /// Open external URL
+  static Future<bool> openUrl(String url) async {
+    var clean = url.trim();
+    if (clean.isEmpty) return false;
+    if (!clean.startsWith('http://') && !clean.startsWith('https://')) {
+      clean = 'https://$clean';
+    }
+    final Uri uri = Uri.parse(clean);
+    try {
+      return await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      debugPrint('Error opening URL: $e');
+      return false;
+    }
   }
 
   /// Open Instagram Profile
   static Future<bool> openInstagram(String username) async {
     final clean = username.replaceAll('@', '').trim();
     if (clean.isEmpty || clean.toLowerCase() == 'not visible') return false;
-    final Uri uri = Uri.parse('https://instagram.com/$clean');
-    if (await canLaunchUrl(uri)) {
-      return await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-    return false;
+    return await openUrl('https://instagram.com/$clean');
   }
 
-  /// Open Web Link
-  static Future<bool> openUrl(String url) async {
-    var formatted = url.trim();
-    if (!formatted.startsWith('http://') && !formatted.startsWith('https://')) {
-      formatted = 'https://$formatted';
-    }
-    final Uri uri = Uri.parse(formatted);
-    if (await canLaunchUrl(uri)) {
-      return await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-    return false;
-  }
-
-  /// Search location in Google Maps
+  /// Open Location in Google Maps
   static Future<bool> openMaps(String location) async {
-    final Uri uri = Uri.parse(
-      'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(location)}',
-    );
-    if (await canLaunchUrl(uri)) {
-      return await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-    return false;
+    final clean = location.trim();
+    if (clean.isEmpty) return false;
+    return await openUrl('https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(clean)}');
   }
 }

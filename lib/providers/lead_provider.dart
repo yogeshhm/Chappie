@@ -210,14 +210,13 @@ class LeadProvider extends ChangeNotifier {
     }
   }
 
-  /// Automatically record that a call was placed to this lead without popping any dialogs
+  /// Automatically record that a call was placed to this lead without popping any dialogs or altering status
   Future<void> recordCallAttempt(String leadId) async {
     final index = _leads.indexWhere((l) => l.id == leadId);
     if (index != -1) {
       final current = _leads[index];
       final updated = current.copyWith(
         lastCallDate: DateTime.now(),
-        callStatus: current.callStatus == 'Not Called' ? 'Called - In Progress' : current.callStatus,
       );
       _leads[index] = updated;
       await storageService.saveLeads(_leads);
