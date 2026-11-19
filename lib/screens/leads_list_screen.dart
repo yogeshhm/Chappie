@@ -110,7 +110,9 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                         location: locationController.text.trim(),
                         instagramUsername: igController.text.trim(),
                         leadPriority: priority,
-                        callStatus: 'Not Called',
+                        callStatus: 'Outreach',
+                        createdBy: 'Yogesh',
+                        updatedBy: 'Yogesh',
                         isCompanyVerified: true,
                         isNestedDataVerified: false,
                       );
@@ -143,34 +145,21 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
     final effectiveColor = activeColor ?? const Color(0xFF3B82F6);
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
         decoration: BoxDecoration(
           color: isSelected
-              ? effectiveColor.withValues(alpha: 0.15)
-              : (isDark ? AppTheme.darkSurface : Colors.white),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected
-                ? effectiveColor.withValues(alpha: 0.6)
-                : (isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
-            width: isSelected ? 1.2 : 1.0,
-          ),
+              ? effectiveColor
+              : (isDark ? const Color(0xFF1A2234) : const Color(0xFFF1F5F9)),
+          borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (isSelected) ...[
-              Container(
-                width: 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  color: effectiveColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 6),
+              const Icon(Icons.check, size: 12, color: Colors.white),
+              const SizedBox(width: 5),
             ],
             Text(
               label,
@@ -178,8 +167,8 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                 color: isSelected
-                    ? (isDark ? Colors.white : effectiveColor)
-                    : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                    ? Colors.white
+                    : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569)),
               ),
             ),
           ],
@@ -197,7 +186,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Lead Directory',
+          'Cadence Leads',
           style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
         ),
         actions: [
@@ -219,19 +208,18 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
       ),
       body: Column(
         children: [
-          // Sleek Search Field
+          // Sleek Search Field (NO borders)
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
             child: Container(
               decoration: BoxDecoration(
-                color: isDark ? AppTheme.darkSurface : Colors.white,
+                color: isDark ? const Color(0xFF131B2E) : Colors.white,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+                    color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
+                    blurRadius: 12,
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
@@ -240,7 +228,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                 onChanged: (value) => provider.setSearchQuery(value),
                 style: const TextStyle(fontSize: 13.5),
                 decoration: InputDecoration(
-                  hintText: 'Search leads by business name, services, phone, city...',
+                  hintText: 'Search leads by name, services, phone, city...',
                   hintStyle: TextStyle(
                     fontSize: 13,
                     color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
@@ -262,7 +250,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
             ),
           ),
 
-          // Horizontal Filter Tabs Row
+          // Horizontal Filter Tabs Row (Cadence Pipeline Stages: All, Outreach, Interested, Demo, Deal, Junk, Lost)
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -279,17 +267,17 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                 ),
                 const SizedBox(width: 8),
                 _buildFilterPill(
-                  label: 'Not Called (${provider.leadsByStatus('Not Called').length})',
-                  isSelected: provider.selectedCallStatus == 'Not Called',
+                  label: 'Outreach (${provider.outreachCount})',
+                  isSelected: provider.selectedCallStatus == 'Outreach',
                   onTap: () => provider.setCallStatusFilter(
-                    provider.selectedCallStatus == 'Not Called' ? 'All' : 'Not Called',
+                    provider.selectedCallStatus == 'Outreach' ? 'All' : 'Outreach',
                   ),
-                  activeColor: const Color(0xFF64748B),
+                  activeColor: const Color(0xFF3B82F6),
                   isDark: isDark,
                 ),
                 const SizedBox(width: 8),
                 _buildFilterPill(
-                  label: 'Interested (${provider.leadsByStatus('Interested').length})',
+                  label: 'Interested (${provider.interestedCount})',
                   isSelected: provider.selectedCallStatus == 'Interested',
                   onTap: () => provider.setCallStatusFilter(
                     provider.selectedCallStatus == 'Interested' ? 'All' : 'Interested',
@@ -299,22 +287,42 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                 ),
                 const SizedBox(width: 8),
                 _buildFilterPill(
-                  label: 'Follow-up (${provider.leadsByStatus('Follow-up').length})',
-                  isSelected: provider.selectedCallStatus == 'Follow-up',
+                  label: 'Demo (${provider.demoCount})',
+                  isSelected: provider.selectedCallStatus == 'Demo',
                   onTap: () => provider.setCallStatusFilter(
-                    provider.selectedCallStatus == 'Follow-up' ? 'All' : 'Follow-up',
+                    provider.selectedCallStatus == 'Demo' ? 'All' : 'Demo',
                   ),
-                  activeColor: const Color(0xFFF59E0B),
+                  activeColor: const Color(0xFF8B5CF6),
                   isDark: isDark,
                 ),
                 const SizedBox(width: 8),
                 _buildFilterPill(
-                  label: 'No Answer (${provider.leadsByStatus('Called - No Answer').length})',
-                  isSelected: provider.selectedCallStatus == 'Called - No Answer',
+                  label: 'Deal (${provider.dealCount})',
+                  isSelected: provider.selectedCallStatus == 'Deal',
                   onTap: () => provider.setCallStatusFilter(
-                    provider.selectedCallStatus == 'Called - No Answer' ? 'All' : 'Called - No Answer',
+                    provider.selectedCallStatus == 'Deal' ? 'All' : 'Deal',
                   ),
-                  activeColor: const Color(0xFF8B5CF6),
+                  activeColor: const Color(0xFF059669),
+                  isDark: isDark,
+                ),
+                const SizedBox(width: 8),
+                _buildFilterPill(
+                  label: 'Junk (${provider.junkCount})',
+                  isSelected: provider.selectedCallStatus == 'Junk',
+                  onTap: () => provider.setCallStatusFilter(
+                    provider.selectedCallStatus == 'Junk' ? 'All' : 'Junk',
+                  ),
+                  activeColor: const Color(0xFF64748B),
+                  isDark: isDark,
+                ),
+                const SizedBox(width: 8),
+                _buildFilterPill(
+                  label: 'Lost (${provider.lostCount})',
+                  isSelected: provider.selectedCallStatus == 'Lost',
+                  onTap: () => provider.setCallStatusFilter(
+                    provider.selectedCallStatus == 'Lost' ? 'All' : 'Lost',
+                  ),
+                  activeColor: const Color(0xFFEF4444),
                   isDark: isDark,
                 ),
                 const SizedBox(width: 8),

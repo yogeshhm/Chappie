@@ -23,16 +23,17 @@ class DashboardScreen extends StatelessWidget {
     final provider = context.watch<LeadProvider>();
 
     final total = provider.totalCount;
-    final called = provider.calledCount;
+    final outreach = provider.outreachCount;
     final interested = provider.interestedCount;
-    final highPriority = provider.highPriorityCount;
+    final demo = provider.demoCount;
+    final deal = provider.dealCount;
+    final lost = provider.lostCount;
+    final junk = provider.junkCount;
     final followUpsDue = provider.followUpsDueCount;
-    final unverified = provider.unverifiedCount;
-    final conversionRate = provider.conversionRate;
 
     final followUpLeads = provider.allLeads.where((l) => l.isFollowUpDue).toList();
     final highPriorityLeads = provider.allLeads
-        .where((l) => l.isHighPriority && l.callStatus == 'Not Called')
+        .where((l) => l.isHighPriority && l.callStatus == 'Outreach')
         .toList();
 
     return Scaffold(
@@ -67,7 +68,7 @@ class DashboardScreen extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'falconate.com • Sales Engine',
+                  'falconate.com • Yogesh',
                   style: TextStyle(
                     fontSize: 11,
                     color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
@@ -79,7 +80,7 @@ class DashboardScreen extends StatelessWidget {
           ],
         ),
         actions: [
-          // Supabase Live Sync Indicator Pill
+          // Supabase Live Sync Indicator Pill (borderless)
           Container(
             margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -87,14 +88,8 @@ class DashboardScreen extends StatelessWidget {
               color: (provider.supabaseService.isConfigured
                       ? const Color(0xFF10B981)
                       : const Color(0xFFF59E0B))
-                  .withValues(alpha: 0.12),
+                  .withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: (provider.supabaseService.isConfigured
-                        ? const Color(0xFF10B981)
-                        : const Color(0xFFF59E0B))
-                    .withValues(alpha: 0.35),
-              ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -145,26 +140,26 @@ class DashboardScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Lead Sheet Status Banner
+              // Lead Sheet Status Banner (borderless)
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: isDark
-                        ? [const Color(0xFF0F1A30), const Color(0xFF0B1222)]
-                        : [const Color(0xFFEFF6FF), Colors.white],
-                  ),
+                  color: isDark ? const Color(0xFF131B2E) : const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
-                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
                 child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF3B82F6).withValues(alpha: 0.15),
+                        color: const Color(0xFF2563EB).withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(Icons.auto_awesome, color: Color(0xFF3B82F6), size: 20),
@@ -175,12 +170,12 @@ class DashboardScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            '14 AI-Analyzed Prospects Ready for Outreach',
+                            'Pipeline & Outreach Dashboard',
                             style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'Company names verified. Click to audit phone numbers and nested details on each call. $unverified items pending nested check.',
+                            'All leads tracked across Outreach, Interested, Demo, Deal, Junk, and Lost.',
                             style: TextStyle(
                               fontSize: 11.5,
                               color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
@@ -194,48 +189,64 @@ class DashboardScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
-              // KPI Bento Grid
+              // KPI Bento Grid (borderless 6-card pipeline tracking)
               LayoutBuilder(
                 builder: (context, constraints) {
                   final isWide = constraints.maxWidth > 650;
                   return GridView.count(
-                    crossAxisCount: isWide ? 4 : 2,
+                    crossAxisCount: isWide ? 3 : 2,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
-                    childAspectRatio: isWide ? 1.65 : 1.35,
+                    childAspectRatio: isWide ? 1.8 : 1.35,
                     children: [
                       _buildBentoKpiCard(
-                        title: 'Total Prospects',
+                        title: 'All Leads',
                         value: '$total',
-                        subtitle: '14 verified companies',
-                        icon: Icons.people_outline_rounded,
+                        subtitle: 'Directory total',
+                        icon: Icons.folder_shared_rounded,
                         color: const Color(0xFF3B82F6),
                         isDark: isDark,
                       ),
                       _buildBentoKpiCard(
-                        title: 'High Priority',
-                        value: '$highPriority',
-                        subtitle: 'Prime website opportunities',
-                        icon: Icons.local_fire_department_rounded,
-                        color: const Color(0xFFF43F5E),
-                        isDark: isDark,
-                      ),
-                      _buildBentoKpiCard(
-                        title: 'Outreach Reach',
-                        value: '$called / $total',
-                        subtitle: '${((called / (total == 0 ? 1 : total)) * 100).toInt()}% contacted',
+                        title: 'Outreach',
+                        value: '$outreach',
+                        subtitle: 'Ready for outreach',
                         icon: Icons.phone_forwarded_rounded,
                         color: const Color(0xFF06B6D4),
                         isDark: isDark,
                       ),
                       _buildBentoKpiCard(
-                        title: 'Hot Leads',
+                        title: 'Interested',
                         value: '$interested',
-                        subtitle: '${conversionRate.toStringAsFixed(1)}% conversion rate',
-                        icon: Icons.verified_rounded,
+                        subtitle: 'Engaged prospects',
+                        icon: Icons.thumb_up_alt_rounded,
                         color: const Color(0xFF10B981),
+                        isDark: isDark,
+                      ),
+                      _buildBentoKpiCard(
+                        title: 'Demo Scheduled',
+                        value: '$demo',
+                        subtitle: 'Product pitched',
+                        icon: Icons.co_present_rounded,
+                        color: const Color(0xFF8B5CF6),
+                        isDark: isDark,
+                      ),
+                      _buildBentoKpiCard(
+                        title: 'Deals Won',
+                        value: '$deal',
+                        subtitle: 'Closed contracts',
+                        icon: Icons.military_tech_rounded,
+                        color: const Color(0xFFF59E0B),
+                        isDark: isDark,
+                      ),
+                      _buildBentoKpiCard(
+                        title: 'Lost Leads',
+                        value: '$lost',
+                        subtitle: '$junk junk leads',
+                        icon: Icons.trending_down_rounded,
+                        color: const Color(0xFFEF4444),
                         isDark: isDark,
                       ),
                     ],
@@ -244,7 +255,7 @@ class DashboardScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              // Command Action Row
+              // Command Action Row (completely borderless)
               Row(
                 children: [
                   Expanded(
@@ -280,20 +291,35 @@ class DashboardScreen extends StatelessWidget {
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF151D30) : Colors.white,
+                        color: isDark ? const Color(0xFF131B2E) : const Color(0xFFF1F5F9),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.03),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      child: OutlinedButton.icon(
+                      child: ElevatedButton.icon(
                         onPressed: onNavigateToKanban,
-                        icon: const Icon(Icons.view_kanban_rounded, size: 18),
-                        label: const Text(
-                          'Kanban Pipeline',
-                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+                        icon: Icon(
+                          Icons.view_kanban_rounded,
+                          size: 18,
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
                         ),
-                        style: OutlinedButton.styleFrom(
+                        label: Text(
+                          'Kanban Pipeline',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13.5,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          side: BorderSide.none,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                       ),
@@ -336,7 +362,7 @@ class DashboardScreen extends StatelessWidget {
                   const Icon(Icons.local_fire_department_rounded, color: Color(0xFFF43F5E), size: 18),
                   const SizedBox(width: 8),
                   Text(
-                    'High Priority Calling Queue (${highPriorityLeads.length} Uncalled)',
+                    'High Priority Outreach Queue (${highPriorityLeads.length} Uncalled)',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                       fontSize: 15,
@@ -349,9 +375,8 @@ class DashboardScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: isDark ? AppTheme.darkSurface : Colors.white,
+                    color: isDark ? const Color(0xFF131B2E) : Colors.white,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
                   ),
                   child: Center(
                     child: Text(
@@ -368,13 +393,19 @@ class DashboardScreen extends StatelessWidget {
 
               const SizedBox(height: 24),
 
-              // Falconate Sales Playbook Card
+              // Falconate Sales Playbook Card (borderless)
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: isDark ? AppTheme.darkSurface : Colors.white,
+                  color: isDark ? const Color(0xFF131B2E) : Colors.white,
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -438,12 +469,11 @@ class DashboardScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? AppTheme.darkSurface : Colors.white,
+        color: isDark ? const Color(0xFF131B2E) : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -506,9 +536,15 @@ class DashboardScreen extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: isDark ? AppTheme.darkSurface : Colors.white,
+        color: isDark ? const Color(0xFF131B2E) : Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),

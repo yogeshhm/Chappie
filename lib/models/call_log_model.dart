@@ -8,6 +8,7 @@ class CallLogModel {
   final DateTime? nextFollowUpDate;
   final int durationSeconds;
   final String pitchedOffering;
+  final String loggedBy; // Cadence user logging: 'Yogesh'
   final DateTime createdAt;
 
   CallLogModel({
@@ -17,7 +18,8 @@ class CallLogModel {
     this.notes = '',
     this.nextFollowUpDate,
     this.durationSeconds = 0,
-    this.pitchedOffering = 'Custom Web Development',
+    this.pitchedOffering = 'Custom Web & Mobile App Development',
+    this.loggedBy = 'Yogesh',
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
@@ -30,6 +32,7 @@ class CallLogModel {
       'next_follow_up_date': nextFollowUpDate?.toIso8601String(),
       'duration_seconds': durationSeconds,
       'pitched_offering': pitchedOffering,
+      'logged_by': loggedBy,
       'created_at': createdAt.toIso8601String(),
     };
   }
@@ -38,13 +41,14 @@ class CallLogModel {
     return CallLogModel(
       id: map['id']?.toString() ?? '',
       leadId: map['lead_id']?.toString() ?? '',
-      outcome: map['outcome']?.toString() ?? 'Connected',
+      outcome: map['outcome']?.toString() ?? 'Outreach',
       notes: map['notes']?.toString() ?? '',
       nextFollowUpDate: map['next_follow_up_date'] != null
           ? DateTime.tryParse(map['next_follow_up_date'].toString())
           : null,
       durationSeconds: int.tryParse(map['duration_seconds']?.toString() ?? '0') ?? 0,
-      pitchedOffering: map['pitched_offering']?.toString() ?? 'Custom Web Development',
+      pitchedOffering: map['pitched_offering']?.toString() ?? 'Custom Web & Mobile App Development',
+      loggedBy: map['logged_by']?.toString() ?? 'Yogesh',
       createdAt: map['created_at'] != null
           ? DateTime.tryParse(map['created_at'].toString()) ?? DateTime.now()
           : DateTime.now(),

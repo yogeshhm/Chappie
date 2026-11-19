@@ -4,7 +4,7 @@ import '../models/lead_model.dart';
 import '../providers/lead_provider.dart';
 import '../services/outreach_service.dart';
 import '../theme/app_theme.dart';
-import '../widgets/call_log_dialog.dart';
+import '../widgets/lost_reason_sheet.dart';
 import 'lead_detail_screen.dart';
 
 class KanbanScreen extends StatelessWidget {
@@ -12,66 +12,70 @@ class KanbanScreen extends StatelessWidget {
 
   final List<Map<String, dynamic>> _pipelineColumns = const [
     {
-      'title': 'Uncontacted Queue',
-      'statuses': ['Not Called'],
-      'color': Color(0xFF64748B),
-      'icon': Icons.hourglass_top_rounded,
-    },
-    {
-      'title': 'Outreach / In Progress',
-      'statuses': ['Called - No Answer', 'Connected', 'Pitch Sent', 'Called - In Progress'],
-      'color': Color(0xFF06B6D4),
+      'title': 'Outreach',
+      'statuses': ['Outreach'],
+      'color': Color(0xFF3B82F6),
       'icon': Icons.send_rounded,
     },
     {
-      'title': 'Interested (Hot 🔥)',
+      'title': 'Interested',
       'statuses': ['Interested'],
       'color': Color(0xFF10B981),
       'icon': Icons.local_fire_department_rounded,
     },
     {
-      'title': 'Follow-up Due',
-      'statuses': ['Follow-up Scheduled'],
-      'color': Color(0xFFF59E0B),
-      'icon': Icons.calendar_month_rounded,
+      'title': 'Demo',
+      'statuses': ['Demo'],
+      'color': Color(0xFF8B5CF6),
+      'icon': Icons.smart_display_rounded,
     },
     {
-      'title': 'Closed Won 🎉',
-      'statuses': ['Closed Won'],
+      'title': 'Deal',
+      'statuses': ['Deal'],
       'color': Color(0xFF059669),
       'icon': Icons.verified_rounded,
     },
     {
-      'title': 'Cold / Inactive',
-      'statuses': ['Not Interested', 'Invalid Number'],
-      'color': Color(0xFFF43F5E),
+      'title': 'Junk',
+      'statuses': ['Junk'],
+      'color': Color(0xFF64748B),
+      'icon': Icons.block_flipped,
+    },
+    {
+      'title': 'Lost',
+      'statuses': ['Lost'],
+      'color': Color(0xFFEF4444),
       'icon': Icons.archive_outlined,
     },
   ];
 
   void _showMoveStageDialog(BuildContext context, LeadModel lead) {
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.transparent,
       builder: (ctx) {
         final isDark = Theme.of(ctx).brightness == Brightness.dark;
-        return AlertDialog(
-          backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-          title: Text(
-            'Move Stage: ${lead.businessName}',
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF131B2E) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
-          content: Column(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildStageOption(ctx, lead, 'Not Called', Icons.hourglass_top_rounded, const Color(0xFF64748B)),
-              _buildStageOption(ctx, lead, 'Called - In Progress', Icons.phone_forwarded_rounded, const Color(0xFF06B6D4)),
-              _buildStageOption(ctx, lead, 'Called - No Answer', Icons.phone_missed_rounded, const Color(0xFF8B5CF6)),
-              _buildStageOption(ctx, lead, 'Pitch Sent', Icons.send_rounded, const Color(0xFF0EA5E9)),
-              _buildStageOption(ctx, lead, 'Interested', Icons.local_fire_department_rounded, const Color(0xFF10B981)),
-              _buildStageOption(ctx, lead, 'Follow-up Scheduled', Icons.calendar_month_rounded, const Color(0xFFF59E0B)),
-              _buildStageOption(ctx, lead, 'Closed Won', Icons.verified_rounded, const Color(0xFF059669)),
-              _buildStageOption(ctx, lead, 'Not Interested', Icons.thumb_down_rounded, const Color(0xFFF43F5E)),
+              Text(
+                'Move Stage: ${lead.businessName}',
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+              ),
+              const SizedBox(height: 12),
+              _buildStageOption(context, ctx, lead, 'Outreach', Icons.send_rounded, const Color(0xFF3B82F6)),
+              _buildStageOption(context, ctx, lead, 'Interested', Icons.local_fire_department_rounded, const Color(0xFF10B981)),
+              _buildStageOption(context, ctx, lead, 'Demo', Icons.smart_display_rounded, const Color(0xFF8B5CF6)),
+              _buildStageOption(context, ctx, lead, 'Deal', Icons.verified_rounded, const Color(0xFF059669)),
+              _buildStageOption(context, ctx, lead, 'Junk', Icons.block_flipped, const Color(0xFF64748B)),
+              _buildStageOption(context, ctx, lead, 'Lost', Icons.archive_outlined, const Color(0xFFEF4444)),
             ],
           ),
         );
@@ -80,23 +84,28 @@ class KanbanScreen extends StatelessWidget {
   }
 
   Widget _buildStageOption(
-      BuildContext context, LeadModel lead, String status, IconData icon, Color color) {
-    final isCurrent = lead.callStatus == status;
+      BuildContext rootCtx, BuildContext bottomSheetCtx, LeadModel lead, String status, IconData icon, Color color) {
+    final isCurrent = lead.callStatus.toLowerCase() == status.toLowerCase();
     return ListTile(
       dense: true,
+      contentPadding: EdgeInsets.zero,
       leading: Icon(icon, color: color, size: 20),
       title: Text(
         status,
         style: TextStyle(
           fontWeight: isCurrent ? FontWeight.bold : FontWeight.w500,
           color: isCurrent ? color : null,
-          fontSize: 13.5,
+          fontSize: 14,
         ),
       ),
       trailing: isCurrent ? const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 18) : null,
       onTap: () {
-        context.read<LeadProvider>().updateLeadStatus(lead.id, status);
-        Navigator.pop(context);
+        Navigator.pop(bottomSheetCtx);
+        if (status == 'Lost') {
+          LostReasonSheet.show(rootCtx, lead);
+        } else {
+          rootCtx.read<LeadProvider>().updateLeadStatus(lead.id, status);
+        }
       },
     );
   }
@@ -110,7 +119,7 @@ class KanbanScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Pipeline Board',
+          'Cadence Pipeline',
           style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
         ),
         actions: [
@@ -120,16 +129,16 @@ class KanbanScreen extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF3B82F6).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF3B82F6).withValues(alpha: 0.3)),
+                  color: const Color(0xFF3B82F6).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  '${leads.length} Active Leads',
+                  '${leads.length} LEADS • YOGESH',
                   style: const TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
                     color: Color(0xFF3B82F6),
-                    fontWeight: FontWeight.w700,
-                    fontSize: 11,
                   ),
                 ),
               ),
@@ -137,66 +146,44 @@ class KanbanScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: PageView.builder(
+      body: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         itemCount: _pipelineColumns.length,
-        controller: PageController(viewportFraction: 0.88),
-        itemBuilder: (context, columnIndex) {
-          final column = _pipelineColumns[columnIndex];
-          final colTitle = column['title'] as String;
-          final validStatuses = (column['statuses'] as List<String>).map((s) => s.toLowerCase()).toSet();
-          final colColor = column['color'] as Color;
-          final colIcon = column['icon'] as IconData;
+        itemBuilder: (context, colIndex) {
+          final col = _pipelineColumns[colIndex];
+          final colTitle = col['title'] as String;
+          final colStatuses = col['statuses'] as List<String>;
+          final colColor = col['color'] as Color;
+          final colIcon = col['icon'] as IconData;
 
-          final colLeads = leads
-              .where((l) => validStatuses.contains(l.callStatus.toLowerCase()))
-              .toList();
+          final colLeads = leads.where((l) {
+            return colStatuses.any((s) => s.toLowerCase() == l.callStatus.toLowerCase());
+          }).toList();
 
           return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
+            width: 290,
+            margin: const EdgeInsets.only(right: 12, bottom: 8),
             decoration: BoxDecoration(
-              color: isDark ? AppTheme.darkSurface : Colors.white,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
-                  blurRadius: 14,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Column Header with Accent Border
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: colColor.withValues(alpha: 0.08),
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
-                    border: Border(
-                      bottom: BorderSide(color: colColor.withValues(alpha: 0.2)),
-                    ),
-                  ),
+                // Column Header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
                   child: Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: colColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(colIcon, color: colColor, size: 16),
-                      ),
-                      const SizedBox(width: 10),
+                      Icon(colIcon, size: 16, color: colColor),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           colTitle,
                           style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -0.2,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13.5,
                             color: colColor,
                           ),
                         ),
@@ -204,13 +191,13 @@ class KanbanScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
                         decoration: BoxDecoration(
-                          color: colColor,
-                          borderRadius: BorderRadius.circular(10),
+                          color: colColor.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           '${colLeads.length}',
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: colColor,
                             fontWeight: FontWeight.w800,
                             fontSize: 11,
                           ),
@@ -220,7 +207,7 @@ class KanbanScreen extends StatelessWidget {
                   ),
                 ),
 
-                // Lead cards in this pipeline column
+                // Lead cards in this pipeline column (NO borders)
                 Expanded(
                   child: colLeads.isEmpty
                       ? Center(
@@ -230,11 +217,11 @@ class KanbanScreen extends StatelessWidget {
                               Icon(
                                 Icons.inbox_rounded,
                                 size: 36,
-                                color: isDark ? const Color(0xFF334155) : Colors.black12,
+                                color: isDark ? Colors.white12 : Colors.black12,
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'No leads in this stage',
+                                'No leads in $colTitle',
                                 style: TextStyle(
                                   color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
                                   fontSize: 12.5,
@@ -245,7 +232,7 @@ class KanbanScreen extends StatelessWidget {
                           ),
                         )
                       : ListView.builder(
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           itemCount: colLeads.length,
                           itemBuilder: (context, i) {
                             final lead = colLeads[i];
@@ -263,18 +250,19 @@ class KanbanScreen extends StatelessWidget {
 
   Widget _buildKanbanCard(BuildContext context, LeadModel lead, bool isDark) {
     final priorityColor = AppTheme.getPriorityColor(lead.leadPriority);
-    final avatarGradient = AppTheme.getAvatarGradient(lead.businessName);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF141C2D) : const Color(0xFFF8FAFC),
+        color: isDark ? const Color(0xFF162035) : Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: lead.isHighPriority
-              ? priorityColor.withValues(alpha: 0.35)
-              : (isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
-        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
@@ -296,27 +284,9 @@ class KanbanScreen extends StatelessWidget {
                 Row(
                   children: [
                     Container(
-                      width: 28,
-                      height: 28,
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
                       decoration: BoxDecoration(
-                        gradient: avatarGradient,
-                        borderRadius: BorderRadius.circular(7),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        lead.businessName.substring(0, 1).toUpperCase(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: priorityColor.withValues(alpha: 0.12),
+                        color: priorityColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -338,7 +308,7 @@ class KanbanScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Text(
                   lead.businessName,
                   style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
@@ -351,84 +321,71 @@ class KanbanScreen extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11.5,
                     color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                    height: 1.3,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                if (lead.hasCaution) ...[
+
+                // If lost, show reason callout
+                if (lead.isLost && lead.lostReason.isNotEmpty) ...[
                   const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      const Icon(Icons.warning_amber_rounded, size: 12, color: Color(0xFFF59E0B)),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          'Has caution note',
-                          style: TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w500,
-                            color: isDark ? const Color(0xFFFCD34D) : const Color(0xFFB45309),
-                          ),
-                          maxLines: 1,
-                        ),
-                      ),
-                    ],
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEF4444).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'Lost: ${lead.lostReason}',
+                      style: const TextStyle(fontSize: 11, color: Color(0xFFEF4444), fontWeight: FontWeight.w600),
+                    ),
                   ),
                 ],
-                const Divider(height: 18),
+
+                const SizedBox(height: 8),
+
+                // Direct action footer
                 Row(
                   children: [
                     if (lead.hasPhone) ...[
-                      InkWell(
-                        onTap: () async {
+                      ElevatedButton.icon(
+                        onPressed: () async {
                           await OutreachService.makePhoneCall(lead.primaryPhone!);
                           if (context.mounted) {
                             context.read<LeadProvider>().recordCallAttempt(lead.id);
                           }
                         },
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.call_rounded, size: 13, color: Color(0xFF3B82F6)),
-                            const SizedBox(width: 4),
-                            Text(
-                              lead.primaryPhone!,
-                              style: const TextStyle(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF3B82F6),
-                              ),
-                            ),
-                          ],
+                        icon: const Icon(Icons.call, size: 12, color: Colors.white),
+                        label: const Text('Call', style: TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.bold)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2563EB),
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
                         ),
                       ),
-                      const Spacer(),
-                    ] else ...[
-                      const Text('No phone', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                      const Spacer(),
+                      const SizedBox(width: 6),
+                      IconButton(
+                        tooltip: 'WhatsApp',
+                        icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16, color: Color(0xFF25D366)),
+                        onPressed: () => OutreachService.openWhatsApp(lead.primaryPhone!),
+                        padding: const EdgeInsets.all(5),
+                        constraints: const BoxConstraints(),
+                        style: IconButton.styleFrom(
+                          backgroundColor: const Color(0xFF25D366).withValues(alpha: 0.15),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                        ),
+                      ),
                     ],
-                    InkWell(
-                      onTap: () => CallLogDialog.show(context, lead),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF2563EB).withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: const Row(
-                          children: [
-                            Icon(Icons.edit_note_rounded, size: 14, color: Color(0xFF3B82F6)),
-                            SizedBox(width: 3),
-                            Text(
-                              'Log',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF3B82F6),
-                              ),
-                            ),
-                          ],
-                        ),
+                    const Spacer(),
+                    Text(
+                      'by Yogesh',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: isDark ? Colors.white30 : Colors.black26,
                       ),
                     ),
                   ],

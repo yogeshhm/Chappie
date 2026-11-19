@@ -127,15 +127,20 @@ class LeadProvider extends ChangeNotifier {
 
   // Metrics
   int get totalCount => _leads.length;
-  int get calledCount => _leads.where((l) => l.callStatus != 'Not Called').length;
+  int get outreachCount => _leads.where((l) => l.callStatus == 'Outreach').length;
   int get interestedCount => _leads.where((l) => l.callStatus == 'Interested').length;
+  int get demoCount => _leads.where((l) => l.callStatus == 'Demo').length;
+  int get dealCount => _leads.where((l) => l.callStatus == 'Deal').length;
+  int get junkCount => _leads.where((l) => l.callStatus == 'Junk').length;
+  int get lostCount => _leads.where((l) => l.callStatus == 'Lost').length;
+  int get calledCount => _leads.where((l) => l.callStatus != 'Outreach').length;
   int get highPriorityCount => _leads.where((l) => l.leadPriority == 'High').length;
   int get followUpsDueCount => _leads.where((l) => l.isFollowUpDue).length;
   int get unverifiedCount => _leads.where((l) => !l.isNestedDataVerified).length;
 
   double get conversionRate {
     if (calledCount == 0) return 0.0;
-    return (interestedCount / calledCount) * 100;
+    return (dealCount / (totalCount == 0 ? 1 : totalCount)) * 100;
   }
 
   // Filter modifiers
@@ -193,15 +198,33 @@ class LeadProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> updateLeadStatus(String leadId, String newStatus) async {
+  Future<void> updateLeadStatus(String leadId, String newStatus, {String? lostReason}) async {
     final index = _leads.indexWhere((l) => l.id == leadId);
     if (index != -1) {
-      final updated = _leads[index].copyWith(
-        callStatus: newStatus,
+      final current = _leads[index];
+      final normStatus = LeadModel.normalizeStatus(newStatus);
+      final updated = current.copyWith(
+        callStatus: normStatus,
+        lostReason: normStatus == 'Lost' ? (lostReason ?? current.lostReason) : '',
         lastCallDate: DateTime.now(),
+        updatedBy: 'Yogesh',
       );
       _leads[index] = updated;
       await storageService.saveLeads(_leads);
+
+      // Cadence user logging: Record activity log
+      final log = CallLogModel(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        leadId: leadId,
+        outcome: normStatus,
+        notes: normStatus == 'Lost' && (lostReason != null && lostReason.isNotEmpty)
+            ? 'Lost: $lostReason (logged by Yogesh)'
+            : 'Status updated to $normStatus (by Yogesh)',
+        loggedBy: 'Yogesh',
+      );
+      _callLogs.insert(0, log);
+      await storageService.saveCallLogs(_callLogs);
+
       notifyListeners();
 
       if (supabaseService.isConfigured) {
@@ -217,9 +240,22 @@ class LeadProvider extends ChangeNotifier {
       final current = _leads[index];
       final updated = current.copyWith(
         lastCallDate: DateTime.now(),
+        updatedBy: 'Yogesh',
       );
       _leads[index] = updated;
       await storageService.saveLeads(_leads);
+
+      // Cadence user logging: Record call attempt
+      final log = CallLogModel(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        leadId: leadId,
+        outcome: current.callStatus,
+        notes: 'Outreach call placed by Yogesh',
+        loggedBy: 'Yogesh',
+      );
+      _callLogs.insert(0, log);
+      await storageService.saveCallLogs(_callLogs);
+
       notifyListeners();
 
       if (supabaseService.isConfigured) {
@@ -234,6 +270,7 @@ class LeadProvider extends ChangeNotifier {
       final current = _leads[index];
       final updated = current.copyWith(
         isNestedDataVerified: !current.isNestedDataVerified,
+        updatedBy: 'Yogesh',
       );
       _leads[index] = updated;
       await storageService.saveLeads(_leads);
@@ -246,12 +283,16 @@ class LeadProvider extends ChangeNotifier {
   }
 
   Future<void> addLead(LeadModel lead) async {
-    _leads.insert(0, lead);
+    final loggedLead = lead.copyWith(
+      createdBy: 'Yogesh',
+      updatedBy: 'Yogesh',
+    );
+    _leads.insert(0, loggedLead);
     await storageService.saveLeads(_leads);
     notifyListeners();
 
     if (supabaseService.isConfigured) {
-      await supabaseService.upsertLead(lead);
+      await supabaseService.upsertLead(loggedLead);
     }
   }
 
@@ -268,50 +309,46 @@ class LeadProvider extends ChangeNotifier {
     required String leadId,
     required String outcome,
     String notes = '',
+    String lostReason = '',
     DateTime? nextFollowUpDate,
     int durationSeconds = 0,
     String pitchedOffering = 'Custom Web Development',
   }) async {
+    final normStatus = LeadModel.normalizeStatus(outcome);
     final callLog = CallLogModel(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       leadId: leadId,
-      outcome: outcome,
-      notes: notes,
+      outcome: normStatus,
+      notes: normStatus == 'Lost' && lostReason.isNotEmpty
+          ? 'Lost: $lostReason. Notes: $notes'.trim()
+          : notes,
       nextFollowUpDate: nextFollowUpDate,
       durationSeconds: durationSeconds,
       pitchedOffering: pitchedOffering,
       createdAt: DateTime.now(),
+      loggedBy: 'Yogesh',
     );
 
     _callLogs.insert(0, callLog);
     await storageService.saveCallLogs(_callLogs);
 
-    // Map call outcome directly to lead status
-    String newLeadStatus;
-    if (outcome.contains('Interested')) {
-      newLeadStatus = 'Interested';
-    } else if (outcome.contains('Follow-up') || nextFollowUpDate != null) {
-      newLeadStatus = 'Follow-up Scheduled';
-    } else if (outcome.contains('No Answer')) {
-      newLeadStatus = 'Called - No Answer';
-    } else if (outcome.contains('Not Interested')) {
-      newLeadStatus = 'Not Interested';
-    } else if (outcome.contains('Won') || outcome.contains('Closed')) {
-      newLeadStatus = 'Closed Won';
-    } else if (outcome.contains('Invalid') || outcome.contains('Wrong Number')) {
-      newLeadStatus = 'Invalid Number';
-    } else {
-      newLeadStatus = 'Connected';
-    }
-
     final leadIndex = _leads.indexWhere((l) => l.id == leadId);
     if (leadIndex != -1) {
       final currentLead = _leads[leadIndex];
+      final finalLostReason = normStatus == 'Lost'
+          ? (lostReason.isNotEmpty
+              ? lostReason
+              : (currentLead.lostReason.isNotEmpty ? currentLead.lostReason : notes))
+          : '';
       final updatedLead = currentLead.copyWith(
-        callStatus: newLeadStatus,
+        callStatus: normStatus,
+        lostReason: finalLostReason,
         lastCallDate: DateTime.now(),
         nextFollowUpDate: nextFollowUpDate ?? currentLead.nextFollowUpDate,
-        notes: notes.isNotEmpty ? '${currentLead.notes}\n[${DateTime.now().toLocal()}]: $notes'.trim() : currentLead.notes,
+        notes: notes.isNotEmpty
+            ? '${currentLead.notes}\n[${DateTime.now().toLocal()} by Yogesh]: $notes'.trim()
+            : currentLead.notes,
+        updatedBy: 'Yogesh',
       );
       _leads[leadIndex] = updatedLead;
       await storageService.saveLeads(_leads);

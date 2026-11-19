@@ -201,12 +201,13 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           bottomNavigationBar: Container(
             decoration: BoxDecoration(
               color: widget.isDarkMode ? AppTheme.darkSurface : Colors.white,
-              border: Border(
-                top: BorderSide(
-                  color: widget.isDarkMode ? AppTheme.darkBorder : AppTheme.lightBorder,
-                  width: 1,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: widget.isDarkMode ? 0.25 : 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, -2),
                 ),
-              ),
+              ],
             ),
             child: NavigationBar(
               backgroundColor: Colors.transparent,

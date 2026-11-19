@@ -95,7 +95,6 @@ class AppTheme {
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: darkBorder, width: 1),
       ),
     ),
     appBarTheme: const AppBarTheme(
@@ -163,7 +162,6 @@ class AppTheme {
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: lightBorder, width: 1),
       ),
     ),
     appBarTheme: const AppBarTheme(
@@ -187,18 +185,18 @@ class AppTheme {
 
   static Color getStatusColor(String status) {
     final lower = status.toLowerCase();
-    if (lower.contains('interested') && !lower.contains('not')) {
-      return emeraldHot;
-    } else if (lower.contains('follow')) {
-      return amberFollowUp;
-    } else if (lower.contains('won') || lower.contains('closed')) {
-      return const Color(0xFF059669);
-    } else if (lower.contains('no answer') || lower.contains('busy') || lower.contains('progress')) {
-      return purpleOutreach;
-    } else if (lower.contains('not interested') || lower.contains('invalid')) {
-      return rosePriority;
+    if (lower == 'interested') {
+      return const Color(0xFF10B981); // Emerald
+    } else if (lower == 'demo') {
+      return const Color(0xFF8B5CF6); // Purple/Violet
+    } else if (lower == 'deal' || lower.contains('won')) {
+      return const Color(0xFF059669); // Green Deal
+    } else if (lower == 'junk' || lower.contains('invalid')) {
+      return const Color(0xFF64748B); // Slate Muted
+    } else if (lower == 'lost' || lower.contains('not interested')) {
+      return const Color(0xFFEF4444); // Rose/Red Lost
     } else {
-      return slateMuted;
+      return const Color(0xFF3B82F6); // Blue Outreach
     }
   }
 

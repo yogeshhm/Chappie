@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../models/lead_model.dart';
 import '../providers/lead_provider.dart';
 import '../services/outreach_service.dart';
 import '../theme/app_theme.dart';
+import 'lost_reason_sheet.dart';
 
 class LeadCard extends StatelessWidget {
   final LeadModel lead;
@@ -25,20 +27,19 @@ class LeadCard extends StatelessWidget {
     final statusColor = AppTheme.getStatusColor(lead.callStatus);
     final priorityColor = AppTheme.getPriorityColor(lead.leadPriority);
 
+    // Clean tonal surface without any border lines
+    final cardBg = isDark ? const Color(0xFF131B2E) : Colors.white;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F172A) : Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
-          width: 1.0,
-        ),
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.04),
+            blurRadius: 14,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -46,13 +47,13 @@ class LeadCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top Row: Business Name + Location & Priority Pill
+                // Top Row: Business Name, Location & Priority
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -75,10 +76,10 @@ class LeadCard extends StatelessWidget {
                                 ),
                               ),
                               if (lead.isCompanyVerified) ...[
-                                const SizedBox(width: 4),
+                                const SizedBox(width: 5),
                                 const Icon(
                                   Icons.verified,
-                                  size: 15,
+                                  size: 14,
                                   color: Color(0xFF3B82F6),
                                 ),
                               ],
@@ -113,13 +114,12 @@ class LeadCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
 
-                    // Priority Badge
+                    // Priority Badge (NO borders)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
                       decoration: BoxDecoration(
-                        color: priorityColor.withValues(alpha: 0.12),
+                        color: priorityColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: priorityColor.withValues(alpha: 0.3)),
                       ),
                       child: Text(
                         lead.leadPriority.toUpperCase(),
@@ -155,11 +155,8 @@ class LeadCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1E1710) : const Color(0xFFFFFBEB),
+                      color: isDark ? const Color(0xFF241A0F) : const Color(0xFFFFFBEB),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: isDark ? const Color(0xFF3E2D1A) : const Color(0xFFFDE68A),
-                      ),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -167,7 +164,7 @@ class LeadCard extends StatelessWidget {
                         const Icon(
                           Icons.info_outline_rounded,
                           color: Color(0xFFD97706),
-                          size: 15,
+                          size: 14,
                         ),
                         const SizedBox(width: 6),
                         Expanded(
@@ -186,17 +183,14 @@ class LeadCard extends StatelessWidget {
                 ],
 
                 const SizedBox(height: 12),
-                const Divider(height: 1, thickness: 1),
-                const SizedBox(height: 10),
 
-                // Phone Numbers & Direct Outreach Actions
+                // Phone Numbers & Direct Outreach (Call & WhatsApp)
                 if (phones.isNotEmpty) ...[
                   ...phones.map((phone) {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 6),
                       child: Row(
                         children: [
-                          // Exact phone number text with phone icon
                           const Icon(Icons.phone_outlined, size: 14, color: Color(0xFF64748B)),
                           const SizedBox(width: 6),
                           Text(
@@ -209,7 +203,7 @@ class LeadCard extends StatelessWidget {
                           ),
                           const Spacer(),
 
-                          // Direct Call Button (Goes straight to dialpad, zero prediction)
+                          // Direct Call Button (NO border)
                           ElevatedButton.icon(
                             onPressed: () async {
                               await OutreachService.makePhoneCall(phone);
@@ -230,6 +224,7 @@ class LeadCard extends StatelessWidget {
                               backgroundColor: const Color(0xFF2563EB),
                               foregroundColor: Colors.white,
                               elevation: 0,
+                              shadowColor: Colors.transparent,
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                               minimumSize: Size.zero,
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -238,7 +233,7 @@ class LeadCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 6),
 
-                          // WhatsApp Button
+                          // WhatsApp Button (NO border)
                           IconButton(
                             tooltip: 'Chat on WhatsApp',
                             onPressed: () => OutreachService.openWhatsApp(phone),
@@ -246,11 +241,9 @@ class LeadCard extends StatelessWidget {
                             padding: const EdgeInsets.all(7),
                             constraints: const BoxConstraints(),
                             style: IconButton.styleFrom(
-                              backgroundColor: const Color(0xFF25D366).withValues(alpha: 0.12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                side: BorderSide(color: const Color(0xFF25D366).withValues(alpha: 0.3)),
-                              ),
+                              backgroundColor: const Color(0xFF25D366).withValues(alpha: 0.15),
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                             ),
                           ),
                         ],
@@ -259,7 +252,7 @@ class LeadCard extends StatelessWidget {
                   }),
                 ] else ...[
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    padding: const EdgeInsets.symmetric(vertical: 2),
                     child: Text(
                       'No phone number available in sheet',
                       style: TextStyle(
@@ -273,30 +266,43 @@ class LeadCard extends StatelessWidget {
 
                 const SizedBox(height: 10),
 
-                // 1-Tap Status Selector (Zero modals, zero confirmation popups)
-                Text(
-                  'STATUS: ${lead.callStatus.toUpperCase()}',
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.6,
-                    color: statusColor,
-                  ),
+                // 1-Tap Pipeline Status Selector (Outreach, Interested, Demo, Deal, Junk, Lost)
+                Row(
+                  children: [
+                    Text(
+                      'PIPELINE STAGE: ',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.6,
+                        color: isDark ? Colors.white38 : Colors.black38,
+                      ),
+                    ),
+                    Text(
+                      lead.callStatus.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.6,
+                        color: statusColor,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 6),
                 Wrap(
                   spacing: 6,
                   runSpacing: 6,
                   children: [
-                    _buildStatusPill(
+                    _buildPipelinePill(
                       context: context,
-                      label: 'Not Called',
-                      targetStatus: 'Not Called',
+                      label: 'Outreach',
+                      targetStatus: 'Outreach',
                       currentStatus: lead.callStatus,
-                      activeColor: const Color(0xFF64748B),
-                      onTap: () => provider.updateLeadStatus(lead.id, 'Not Called'),
+                      activeColor: const Color(0xFF3B82F6),
+                      onTap: () => provider.updateLeadStatus(lead.id, 'Outreach'),
                     ),
-                    _buildStatusPill(
+                    _buildPipelinePill(
                       context: context,
                       label: 'Interested',
                       targetStatus: 'Interested',
@@ -304,101 +310,129 @@ class LeadCard extends StatelessWidget {
                       activeColor: const Color(0xFF10B981),
                       onTap: () => provider.updateLeadStatus(lead.id, 'Interested'),
                     ),
-                    _buildStatusPill(
+                    _buildPipelinePill(
                       context: context,
-                      label: 'Follow-up',
-                      targetStatus: 'Follow-up',
-                      currentStatus: lead.callStatus,
-                      activeColor: const Color(0xFFF59E0B),
-                      onTap: () => provider.updateLeadStatus(lead.id, 'Follow-up'),
-                    ),
-                    _buildStatusPill(
-                      context: context,
-                      label: 'No Answer',
-                      targetStatus: 'Called - No Answer',
+                      label: 'Demo',
+                      targetStatus: 'Demo',
                       currentStatus: lead.callStatus,
                       activeColor: const Color(0xFF8B5CF6),
-                      onTap: () => provider.updateLeadStatus(lead.id, 'Called - No Answer'),
+                      onTap: () => provider.updateLeadStatus(lead.id, 'Demo'),
                     ),
-                    _buildStatusPill(
+                    _buildPipelinePill(
                       context: context,
-                      label: 'Not Interested',
-                      targetStatus: 'Not Interested',
+                      label: 'Deal',
+                      targetStatus: 'Deal',
+                      currentStatus: lead.callStatus,
+                      activeColor: const Color(0xFF059669),
+                      onTap: () => provider.updateLeadStatus(lead.id, 'Deal'),
+                    ),
+                    _buildPipelinePill(
+                      context: context,
+                      label: 'Junk',
+                      targetStatus: 'Junk',
+                      currentStatus: lead.callStatus,
+                      activeColor: const Color(0xFF64748B),
+                      onTap: () => provider.updateLeadStatus(lead.id, 'Junk'),
+                    ),
+                    _buildPipelinePill(
+                      context: context,
+                      label: 'Lost',
+                      targetStatus: 'Lost',
                       currentStatus: lead.callStatus,
                       activeColor: const Color(0xFFEF4444),
-                      onTap: () => provider.updateLeadStatus(lead.id, 'Not Interested'),
+                      onTap: () => LostReasonSheet.show(context, lead),
                     ),
                   ],
                 ),
 
-                // Optional Quick Link Icons (Instagram, Website, Maps)
-                if (lead.hasInstagram || lead.hasWebsite || lead.location.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      if (lead.hasInstagram) ...[
-                        InkWell(
-                          onTap: () => OutreachService.openInstagram(lead.instagramUsername),
-                          borderRadius: BorderRadius.circular(6),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.camera_alt_outlined, size: 13, color: Color(0xFFE1306C)),
-                                const SizedBox(width: 3),
-                                Text(
-                                  '@${lead.instagramUsername}',
-                                  style: const TextStyle(fontSize: 11, color: Color(0xFFE1306C), fontWeight: FontWeight.w500),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                      ],
-                      if (lead.hasWebsite) ...[
-                        InkWell(
-                          onTap: () => OutreachService.openUrl(lead.websiteLink),
-                          borderRadius: BorderRadius.circular(6),
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.language_rounded, size: 13, color: Color(0xFF3B82F6)),
-                                SizedBox(width: 3),
-                                Text(
-                                  'Website',
-                                  style: TextStyle(fontSize: 11, color: Color(0xFF3B82F6), fontWeight: FontWeight.w500),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                      ],
-                      const Spacer(),
+                // If Lost: Display Reason
+                if (lead.isLost && lead.lostReason.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEF4444).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Lost Reason: ${lead.lostReason}',
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        color: Color(0xFFEF4444),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: 10),
+
+                // Footer Row: Cadence User Logging & Quick Links
+                Row(
+                  children: [
+                    // User logging badge
+                    Icon(
+                      Icons.account_circle_outlined,
+                      size: 13,
+                      color: isDark ? Colors.white38 : Colors.black38,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Yogesh • ${DateFormat('MMM d, h:mm a').format(lead.updatedAt)}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isDark ? Colors.white38 : Colors.black38,
+                      ),
+                    ),
+                    const Spacer(),
+
+                    // Instagram link
+                    if (lead.hasInstagram) ...[
                       InkWell(
-                        onTap: onTap,
+                        onTap: () => OutreachService.openInstagram(lead.instagramUsername),
                         borderRadius: BorderRadius.circular(6),
                         child: const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'Details',
-                                style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
-                              ),
-                              Icon(Icons.chevron_right_rounded, size: 15, color: Color(0xFF64748B)),
-                            ],
-                          ),
+                          child: Icon(Icons.camera_alt_outlined, size: 14, color: Color(0xFFE1306C)),
                         ),
                       ),
+                      const SizedBox(width: 4),
                     ],
-                  ),
-                ],
+
+                    // Website link
+                    if (lead.hasWebsite) ...[
+                      InkWell(
+                        onTap: () => OutreachService.openUrl(lead.websiteLink),
+                        borderRadius: BorderRadius.circular(6),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                          child: Icon(Icons.language_rounded, size: 14, color: Color(0xFF3B82F6)),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+
+                    // Details chevron
+                    InkWell(
+                      onTap: onTap,
+                      borderRadius: BorderRadius.circular(6),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Details',
+                              style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                            ),
+                            Icon(Icons.chevron_right_rounded, size: 15, color: Color(0xFF64748B)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -407,7 +441,7 @@ class LeadCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusPill({
+  Widget _buildPipelinePill({
     required BuildContext context,
     required String label,
     required String targetStatus,
@@ -425,29 +459,16 @@ class LeadCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
         decoration: BoxDecoration(
           color: isSelected
-              ? activeColor.withValues(alpha: 0.18)
-              : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9)),
+              ? activeColor
+              : (isDark ? const Color(0xFF1E283D) : const Color(0xFFF1F5F9)),
           borderRadius: BorderRadius.circular(6),
-          border: Border.all(
-            color: isSelected
-                ? activeColor
-                : (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
-            width: isSelected ? 1.4 : 1.0,
-          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (isSelected) ...[
-              Container(
-                width: 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  color: activeColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 5),
+              const Icon(Icons.check, size: 11, color: Colors.white),
+              const SizedBox(width: 4),
             ],
             Text(
               label,
@@ -455,7 +476,7 @@ class LeadCard extends StatelessWidget {
                 fontSize: 11.5,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                 color: isSelected
-                    ? (isDark ? Colors.white : activeColor)
+                    ? Colors.white
                     : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569)),
               ),
             ),

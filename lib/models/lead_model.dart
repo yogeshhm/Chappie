@@ -13,7 +13,10 @@ class LeadModel {
   final String websiteStatus;
   final String websiteLink;
   final String leadPriority; // 'High', 'Medium', 'Low'
-  final String callStatus; // 'Not Called', 'Called - No Answer', 'Connected', 'Interested', 'Follow-up Scheduled', 'Pitch Sent', 'Closed Won', 'Not Interested', 'Invalid Number'
+  final String callStatus; // 'Outreach', 'Interested', 'Demo', 'Deal', 'Junk', 'Lost'
+  final String lostReason; // Reason required when status is 'Lost'
+  final String updatedBy; // Cadence user logging: 'Yogesh'
+  final String createdBy; // 'Yogesh'
   final DateTime? lastCallDate;
   final DateTime? nextFollowUpDate;
   final String notes;
@@ -36,7 +39,10 @@ class LeadModel {
     this.websiteStatus = 'No matching website verified',
     this.websiteLink = '',
     this.leadPriority = 'Medium',
-    this.callStatus = 'Not Called',
+    this.callStatus = 'Outreach',
+    this.lostReason = '',
+    this.updatedBy = 'Yogesh',
+    this.createdBy = 'Yogesh',
     this.lastCallDate,
     this.nextFollowUpDate,
     this.notes = '',
@@ -72,11 +78,29 @@ class LeadModel {
 
   bool get hasCaution => cautionNotes.trim().isNotEmpty;
   bool get isHighPriority => leadPriority.toLowerCase() == 'high';
+  bool get isLost => callStatus.toLowerCase() == 'lost';
 
   bool get isFollowUpDue {
     if (nextFollowUpDate == null) return false;
     final now = DateTime.now();
     return nextFollowUpDate!.isBefore(now.add(const Duration(hours: 12)));
+  }
+
+  static String normalizeStatus(String raw) {
+    final lower = raw.trim().toLowerCase();
+    if (lower == 'interested' || lower.contains('interested') && !lower.contains('not')) {
+      return 'Interested';
+    } else if (lower == 'demo' || lower.contains('demo') || lower.contains('pitch')) {
+      return 'Demo';
+    } else if (lower == 'deal' || lower.contains('won') || lower.contains('closed')) {
+      return 'Deal';
+    } else if (lower == 'junk' || lower.contains('invalid') || lower.contains('wrong')) {
+      return 'Junk';
+    } else if (lower == 'lost' || lower.contains('not interested') || lower.contains('cold')) {
+      return 'Lost';
+    } else {
+      return 'Outreach';
+    }
   }
 
   LeadModel copyWith({
@@ -93,6 +117,9 @@ class LeadModel {
     String? websiteLink,
     String? leadPriority,
     String? callStatus,
+    String? lostReason,
+    String? updatedBy,
+    String? createdBy,
     DateTime? lastCallDate,
     DateTime? nextFollowUpDate,
     String? notes,
@@ -115,7 +142,10 @@ class LeadModel {
       websiteStatus: websiteStatus ?? this.websiteStatus,
       websiteLink: websiteLink ?? this.websiteLink,
       leadPriority: leadPriority ?? this.leadPriority,
-      callStatus: callStatus ?? this.callStatus,
+      callStatus: callStatus != null ? normalizeStatus(callStatus) : this.callStatus,
+      lostReason: lostReason ?? this.lostReason,
+      updatedBy: updatedBy ?? this.updatedBy,
+      createdBy: createdBy ?? this.createdBy,
       lastCallDate: lastCallDate ?? this.lastCallDate,
       nextFollowUpDate: nextFollowUpDate ?? this.nextFollowUpDate,
       notes: notes ?? this.notes,
@@ -142,6 +172,9 @@ class LeadModel {
       'website_link': websiteLink,
       'lead_priority': leadPriority,
       'call_status': callStatus,
+      'lost_reason': lostReason,
+      'updated_by': updatedBy,
+      'created_by': createdBy,
       'last_call_date': lastCallDate?.toIso8601String(),
       'next_follow_up_date': nextFollowUpDate?.toIso8601String(),
       'notes': notes,
@@ -167,7 +200,10 @@ class LeadModel {
       websiteStatus: map['website_status']?.toString() ?? 'No matching website verified',
       websiteLink: map['website_link']?.toString() ?? '',
       leadPriority: map['lead_priority']?.toString() ?? 'Medium',
-      callStatus: map['call_status']?.toString() ?? 'Not Called',
+      callStatus: normalizeStatus(map['call_status']?.toString() ?? 'Outreach'),
+      lostReason: map['lost_reason']?.toString() ?? '',
+      updatedBy: map['updated_by']?.toString() ?? 'Yogesh',
+      createdBy: map['created_by']?.toString() ?? 'Yogesh',
       lastCallDate: map['last_call_date'] != null
           ? DateTime.tryParse(map['last_call_date'].toString())
           : null,

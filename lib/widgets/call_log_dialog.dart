@@ -27,50 +27,54 @@ class _CallLogDialogState extends State<CallLogDialog> {
   String _selectedOffering = 'Custom Web Development (falconate.com)';
   DateTime? _selectedFollowUpDate;
   final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _lostReasonController = TextEditingController();
 
   final List<Map<String, dynamic>> _outcomes = [
     {
-      'label': 'Interested (Hot Lead)',
+      'label': 'Interested (High Intent)',
       'value': 'Interested',
-      'icon': Icons.local_fire_department,
+      'icon': Icons.thumb_up_alt_rounded,
       'color': Color(0xFF10B981)
     },
     {
-      'label': 'Follow-up Scheduled',
-      'value': 'Follow-up Scheduled',
-      'icon': Icons.calendar_month,
-      'color': Color(0xFFF59E0B)
-    },
-    {
-      'label': 'Connected - Pitch Sent',
-      'value': 'Pitch Sent',
-      'icon': Icons.send,
-      'color': Color(0xFF0EA5E9)
-    },
-    {
-      'label': 'No Answer / Busy',
-      'value': 'Called - No Answer',
-      'icon': Icons.phone_missed,
+      'label': 'Demo Scheduled',
+      'value': 'Demo',
+      'icon': Icons.co_present_rounded,
       'color': Color(0xFF8B5CF6)
     },
     {
-      'label': 'Closed Won (Signed Client)',
-      'value': 'Closed Won',
-      'icon': Icons.verified,
-      'color': Color(0xFF059669)
+      'label': 'Deal Won (Closed)',
+      'value': 'Deal',
+      'icon': Icons.military_tech_rounded,
+      'color': Color(0xFFF59E0B)
     },
     {
-      'label': 'Not Interested',
-      'value': 'Not Interested',
-      'icon': Icons.thumb_down,
-      'color': Color(0xFFEF4444)
+      'label': 'Outreach (Follow-up)',
+      'value': 'Outreach',
+      'icon': Icons.phone_forwarded_rounded,
+      'color': Color(0xFF0EA5E9)
     },
     {
-      'label': 'Invalid Number',
-      'value': 'Invalid Number',
-      'icon': Icons.cancel,
+      'label': 'Junk (Invalid / Irrelevant)',
+      'value': 'Junk',
+      'icon': Icons.cancel_outlined,
       'color': Color(0xFF64748B)
     },
+    {
+      'label': 'Lost (Not Interested)',
+      'value': 'Lost',
+      'icon': Icons.trending_down_rounded,
+      'color': Color(0xFFEF4444)
+    },
+  ];
+
+  final List<String> _commonLostReasons = [
+    'Price too high / Budget issue',
+    'Already has dedicated agency/dev',
+    'Not interested in digital presence',
+    'Chose a competitor',
+    'Timing not right / Follow-up later',
+    'Unreachable / Disconnected',
   ];
 
   final List<String> _offerings = [
@@ -84,6 +88,7 @@ class _CallLogDialogState extends State<CallLogDialog> {
   @override
   void dispose() {
     _notesController.dispose();
+    _lostReasonController.dispose();
     super.dispose();
   }
 
@@ -127,12 +132,8 @@ class _CallLogDialogState extends State<CallLogDialog> {
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
       ),
       decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor,
+        color: isDark ? const Color(0xFF0F172A) : Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-          width: 1,
-        ),
       ),
       child: SingleChildScrollView(
         child: Column(
@@ -219,6 +220,7 @@ class _CallLogDialogState extends State<CallLogDialog> {
                   selected: isSelected,
                   selectedColor: itemColor,
                   backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                  side: BorderSide.none,
                   labelStyle: TextStyle(
                     color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
@@ -228,8 +230,7 @@ class _CallLogDialogState extends State<CallLogDialog> {
                     if (selected) {
                       setState(() {
                         _selectedOutcome = item['value'] as String;
-                        // Auto-prompt follow-up if outcome is follow-up
-                        if (_selectedOutcome == 'Follow-up Scheduled' && _selectedFollowUpDate == null) {
+                        if (_selectedOutcome == 'Outreach' && _selectedFollowUpDate == null) {
                           _selectedFollowUpDate = DateTime.now().add(const Duration(days: 2));
                         }
                       });
@@ -238,6 +239,78 @@ class _CallLogDialogState extends State<CallLogDialog> {
                 );
               }).toList(),
             ),
+
+            // If Lost, prompt for reason
+            if (_selectedOutcome == 'Lost') ...[
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  const Icon(Icons.info_outline_rounded, color: Color(0xFFEF4444), size: 16),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Why was this lead lost? (Required)',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFFEF4444),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: _commonLostReasons.map((reason) {
+                  final isSel = _lostReasonController.text == reason;
+                  return InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () => setState(() => _lostReasonController.text = reason),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isSel
+                            ? const Color(0xFFEF4444)
+                            : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        reason,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
+                          color: isSel
+                              ? Colors.white
+                              : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569)),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _lostReasonController,
+                decoration: InputDecoration(
+                  hintText: 'Or enter custom reason for losing lead...',
+                  filled: true,
+                  fillColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.all(12),
+                ),
+              ),
+            ],
+
             const SizedBox(height: 20),
 
             // Falconate Offering Pitched
@@ -253,9 +326,6 @@ class _CallLogDialogState extends State<CallLogDialog> {
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
-                ),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
@@ -298,11 +368,6 @@ class _CallLogDialogState extends State<CallLogDialog> {
                           decoration: BoxDecoration(
                             color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: _selectedFollowUpDate != null
-                                  ? const Color(0xFF0EA5E9)
-                                  : (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
-                            ),
                           ),
                           child: Row(
                             children: [
@@ -364,15 +429,15 @@ class _CallLogDialogState extends State<CallLogDialog> {
                 fillColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
-                  ),
+                  borderSide: BorderSide.none,
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
-                  ),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
                 ),
                 contentPadding: const EdgeInsets.all(12),
               ),
@@ -403,6 +468,7 @@ class _CallLogDialogState extends State<CallLogDialog> {
                     leadId: widget.lead.id,
                     outcome: _selectedOutcome,
                     notes: _notesController.text.trim(),
+                    lostReason: _lostReasonController.text.trim(),
                     nextFollowUpDate: _selectedFollowUpDate,
                     pitchedOffering: _selectedOffering,
                   );
@@ -411,7 +477,7 @@ class _CallLogDialogState extends State<CallLogDialog> {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Interaction logged for ${widget.lead.businessName} (Status: $_selectedOutcome)'),
+                        content: Text('Interaction logged by Yogesh for ${widget.lead.businessName} (Status: $_selectedOutcome)'),
                         backgroundColor: const Color(0xFF10B981),
                         behavior: SnackBarBehavior.floating,
                       ),
