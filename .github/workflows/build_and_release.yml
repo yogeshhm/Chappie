@@ -50,13 +50,13 @@ jobs:
       - name: Upload Android APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: falcon-crm-android-apk
+          name: cadence-android-apk
           path: build/app/outputs/flutter-apk/app-release.apk
 
       - name: Upload Web Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: falcon-crm-web
+          name: cadence-web
           path: build/web
 
       - name: Update Latest GitHub Release
@@ -64,8 +64,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
-          name: "FalconCRM Latest Release"
-          body: "Automated cloud build from latest commit to main. Download the APK below."
+          name: "Cadence Latest Release"
+          body: "Automated cloud build for Cadence (Falconate.com). Download the APK below."
           files: build/app/outputs/flutter-apk/app-release.apk
           make_latest: true
 
@@ -74,6 +74,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: build/app/outputs/flutter-apk/app-release.apk
-          name: Release ${{ github.ref_name }}
+          name: Cadence ${{ github.ref_name }}
           draft: false
           prerelease: false

@@ -49,7 +49,7 @@ class _FalconCrmAppState extends State<FalconCrmApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'FalconCRM | Falconate Leads & Relationship Engine',
+      title: 'Cadence | Falconate Leads & Relationship Engine',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
@@ -130,7 +130,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'FalconCRM',
+                                'Cadence',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w800,
                                   fontSize: 16,

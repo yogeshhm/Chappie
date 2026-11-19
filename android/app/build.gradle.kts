@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.falconate.falcon_crm"
+    namespace = "com.falconate.cadence"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -15,21 +15,41 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.falconate.falcon_crm"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
+        applicationId = "com.falconate.cadence"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("cadenceSigning") {
+            val keystoreFile = file("cadence.jks")
+            if (keystoreFile.exists()) {
+                storeFile = keystoreFile
+                storePassword = "cadence123"
+                keyAlias = "cadence"
+                keyPassword = "cadence123"
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            val keyFile = file("cadence.jks")
+            if (keyFile.exists()) {
+                signingConfig = signingConfigs.getByName("cadenceSigning")
+            } else {
+                signingConfig = signingConfigs.getByName("debug")
+            }
+        }
+        debug {
+            val keyFile = file("cadence.jks")
+            if (keyFile.exists()) {
+                signingConfig = signingConfigs.getByName("cadenceSigning")
+            } else {
+                signingConfig = signingConfigs.getByName("debug")
+            }
         }
     }
 }

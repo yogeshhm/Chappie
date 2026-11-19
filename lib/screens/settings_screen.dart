@@ -83,7 +83,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('FalconCRM Settings & Cloud Sync'),
+        title: const Text('Cadence Settings & Cloud Sync'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
