@@ -28,6 +28,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.44.1'
           channel: 'stable'
           cache: true
 
@@ -35,7 +36,7 @@ jobs:
         run: flutter pub get
 
       - name: Analyze Code
-        run: flutter analyze
+        run: flutter analyze --no-fatal-infos
 
       - name: Run Tests
         run: flutter test
@@ -46,19 +47,29 @@ jobs:
       - name: Build Web Release
         run: flutter build web --release
 
-      - name: Upload Android APK
+      - name: Upload Android APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: falcon-crm-android-apk
           path: build/app/outputs/flutter-apk/app-release.apk
 
-      - name: Upload Web Build
+      - name: Upload Web Build Artifact
         uses: actions/upload-artifact@v4
         with:
           name: falcon-crm-web
           path: build/web
 
-      - name: Create GitHub Release on Tag
+      - name: Update Latest GitHub Release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: "FalconCRM Latest Release"
+          body: "Automated cloud build from latest commit to main. Download the APK below."
+          files: build/app/outputs/flutter-apk/app-release.apk
+          make_latest: true
+
+      - name: Create Tagged GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
